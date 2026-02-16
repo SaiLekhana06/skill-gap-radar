@@ -78,10 +78,10 @@ if uploaded_file:
     st.progress(int(score))
     st.write("Readiness Score:", round(score, 2), "%")
     
-if missing:
-    st.subheader("Recommended Skills to Learn")
-    for skill in missing:
-        st.write(f"• {skill}")
+    if missing:
+        st.subheader("Recommended Skills to Learn")
+        for skill in missing:
+            st.write(f"• {skill}")
 
 
 
