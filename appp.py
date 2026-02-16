@@ -9,22 +9,55 @@ import pdfplumber
 st.title("Skill Gap Radar 🚀")
 st.write("Upload your resume and see how ready you are for your dream role.")
 
-df = pd.read_csv("job_description_1.csv")
-roles = ["Select (Optional)"] + sorted(df["role_category"].dropna().unique())
-selected_role = st.selectbox("Target Role (Optional)",roles,index=0,placeholder="Type to search role...")
+col1, col2 = st.columns(2)
 
-if selected_role != "Select (Optional)":
+with col1:
+    role_search = st.text_input("Search Target Role")
+
+with col2:
+    job_search = st.text_input("Search Job Title")
+
+df = pd.read_csv("job_description_1.csv")
+roles = ["-- Select Role (Optional) --"] + sorted(df["role_category"].dropna().unique())
+
+# STEP 1 — Search box
+role_search = st.text_input("Search Target Role")
+
+# STEP 2 — Get roles
+roles = sorted(df["role_category"].dropna().unique())
+
+# STEP 3 — Apply search filter
+if role_search:
+    roles = [r for r in roles if role_search.lower() in r.lower()]
+
+# STEP 4 — Add optional first option
+roles = ["-- Select Role (Optional) --"] + roles
+
+# STEP 5 — Create dropdown
+selected_role = st.selectbox(
+    "Target Role (Optional)",
+    roles,
+    index=0
+)
+
+
+
+if selected_role != "-- Select Role (Optional) --":
     filtered_jobs = df[df["role_category"] == selected_role]
 else:
     filtered_jobs = df
 
+
+job_search = st.text_input("Search Job Title")
+
 job_titles = sorted(filtered_jobs["job_title"].dropna().unique())
 
-selected_job_title = st.selectbox(
-    "Select Job Title (Required)",
-    job_titles,
-    placeholder="Type to search job title..."
-)
+if job_search:
+    job_titles = [jt for jt in job_titles if job_search.lower() in jt.lower()]
+
+selected_job_title = st.selectbox("Select Job Title (Required)", job_titles)
+
+
 
 uploaded_file = st.file_uploader("Upload Resume", type=["pdf", "docx"])
 
