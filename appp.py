@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import pandas as pd
 import json
@@ -186,4 +185,3 @@ elif not selected_job:
     st.info("👆 Please select a job title to begin analysis")
 elif not uploaded_file:
     st.info("👆 Please upload your resume to analyze skill gaps")
-```
