@@ -62,7 +62,7 @@ for skills in role_jobs["skills_required"]:
 role_skill_freq = Counter(role_skills)
 required_skills = [skill for skill, _ in role_skill_freq.most_common(10)]
 
-with open("skill_frequency(finn).json", "r") as f:
+with open("skill_frequency (finn).json", "r") as f:
     skill_freq = json.load(f)
 skill_list = list(skill_freq.keys())
 
