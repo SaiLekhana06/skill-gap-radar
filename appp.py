@@ -66,74 +66,104 @@ def extract_text_from_docx(file):
 # UI Layout
 col1, col2 = st.columns(2)
 
+# Initialize session state for selections
+if 'selected_role' not in st.session_state:
+    st.session_state.selected_role = None
+if 'selected_job_title' not in st.session_state:
+    st.session_state.selected_job_title = None
+
 # Target Role Section
 with col1:
     st.subheader("🎯 Target Role")
     
-    # Search input for role
+    # Single search input for role with autocomplete behavior
     role_search_input = st.text_input(
         "Search for a role category",
-        "",
+        value=st.session_state.selected_role if st.session_state.selected_role else "",
         key="role_search_input_key",
-        placeholder="Type to filter roles..."
+        placeholder="Type to search roles..."
     )
     
     # Get all unique roles and sort alphabetically
     all_roles = sorted(df['role_category'].dropna().unique().tolist())
     
-    # Filter roles based on search input
+    # Filter roles based on search input in real-time
     if role_search_input:
         filtered_roles = [role for role in all_roles if role_search_input.lower() in role.lower()]
+        
+        # Show filtered results as clickable options
+        if filtered_roles:
+            st.markdown("**Matching Roles:**")
+            for role in filtered_roles[:10]:  # Show top 10 matches
+                if st.button(role, key=f"role_btn_{role}", use_container_width=True):
+                    st.session_state.selected_role = role
+                    st.rerun()
+        else:
+            st.info("No matching roles found")
+            st.session_state.selected_role = None
     else:
-        filtered_roles = all_roles
-    
-    # Add optional placeholder at the beginning
-    role_options = ["-- Select Role (Optional) --"] + filtered_roles
-    
-    # Dropdown for role selection
-    selected_role = st.selectbox(
-        "Select a role category",
-        role_options,
-        key="role_selectbox_key"
-    )
+        st.session_state.selected_role = None
+        st.info("Start typing to search for roles (Optional)")
 
 # Job Title Section
 with col2:
     st.subheader("💼 Job Title")
     
-    # Search input for job title
+    # Single search input for job title with autocomplete behavior
     job_search_input = st.text_input(
         "Search for a job title",
-        "",
+        value=st.session_state.selected_job_title if st.session_state.selected_job_title else "",
         key="job_search_input_key",
-        placeholder="Type to filter job titles..."
+        placeholder="Type to search job titles..."
     )
     
     # Filter dataframe based on selected role
-    if selected_role != "-- Select Role (Optional) --":
-        role_filtered_df = df[df['role_category'] == selected_role]
+    if st.session_state.selected_role:
+        role_filtered_df = df[df['role_category'] == st.session_state.selected_role]
     else:
         role_filtered_df = df
     
     # Get all unique job titles from filtered dataframe and sort alphabetically
     all_job_titles = sorted(role_filtered_df['job_title'].dropna().unique().tolist())
     
-    # Filter job titles based on search input
+    # Filter job titles based on search input in real-time
     if job_search_input:
         filtered_job_titles = [job for job in all_job_titles if job_search_input.lower() in job.lower()]
+        
+        # Show filtered results as clickable options
+        if filtered_job_titles:
+            st.markdown("**Matching Job Titles:**")
+            for job in filtered_job_titles[:10]:  # Show top 10 matches
+                if st.button(job, key=f"job_btn_{job}", use_container_width=True):
+                    st.session_state.selected_job_title = job
+                    st.rerun()
+        else:
+            st.info("No matching job titles found")
+            st.session_state.selected_job_title = None
     else:
-        filtered_job_titles = all_job_titles
+        st.session_state.selected_job_title = None
+        st.info("Start typing to search for job titles (Required)")
+
+st.markdown("---")
+
+# Display current selections
+if st.session_state.selected_role or st.session_state.selected_job_title:
+    st.markdown("#### Current Selection:")
+    selection_col1, selection_col2 = st.columns(2)
     
-    # Dropdown for job title selection
-    if filtered_job_titles:
-        selected_job_title = st.selectbox(
-            "Select a job title (Required)",
-            filtered_job_titles,
-            key="job_selectbox_key"
-        )
-    else:
-        st.warning("No job titles match your search criteria")
-        selected_job_title = None
+    with selection_col1:
+        if st.session_state.selected_role:
+            st.success(f"**Role:** {st.session_state.selected_role}")
+            if st.button("Clear Role Selection", key="clear_role"):
+                st.session_state.selected_role = None
+                st.rerun()
+    
+    with selection_col2:
+        if st.session_state.selected_job_title:
+            st.success(f"**Job Title:** {st.session_state.selected_job_title}")
+            if st.button("Clear Job Title Selection", key="clear_job"):
+                st.session_state.selected_job_title = None
+                st.rerun()
 
 st.markdown("---")
 
@@ -146,7 +176,7 @@ uploaded_file = st.file_uploader(
 )
 
 # Process when both job title is selected and resume is uploaded
-if uploaded_file and selected_job_title:
+if uploaded_file and st.session_state.selected_job_title:
     
     try:
         # Extract text from uploaded resume
@@ -162,7 +192,7 @@ if uploaded_file and selected_job_title:
         resume_skills = extract_skills(resume_text, skill_list)
         
         # Get required skills for selected job title
-        job_data = df[df['job_title'] == selected_job_title].iloc[0]
+        job_data = df[df['job_title'] == st.session_state.selected_job_title].iloc[0]
         required_skills_raw = job_data['skills_required']
         
         # Parse and normalize required skills
@@ -234,7 +264,7 @@ if uploaded_file and selected_job_title:
     except Exception as e:
         st.error(f"Error processing resume: {e}")
 
-elif not selected_job_title:
-    st.info("👆 Please select a job title to begin analysis")
+elif not st.session_state.selected_job_title:
+    st.info("👆 Please search and select a job title to begin analysis")
 elif not uploaded_file:
     st.info("👆 Please upload your resume to analyze skill gaps")
