@@ -10,8 +10,21 @@ st.title("Skill Gap Radar 🚀")
 st.write("Upload your resume and see how ready you are for your dream role.")
 
 df = pd.read_csv("job_description_1.csv")
-roles = df["role_category"].unique()
-selected_role = st.selectbox("Select Target Role", roles)
+roles = ["Select (Optional)"] + sorted(df["role_category"].dropna().unique())
+selected_role = st.selectbox("Target Role (Optional)",roles,index=0,placeholder="Type to search role...")
+
+if selected_role != "Select (Optional)":
+    filtered_jobs = df[df["role_category"] == selected_role]
+else:
+    filtered_jobs = df
+
+job_titles = sorted(filtered_jobs["job_title"].dropna().unique())
+
+selected_job_title = st.selectbox(
+    "Select Job Title (Required)",
+    job_titles,
+    placeholder="Type to search job title..."
+)
 
 uploaded_file = st.file_uploader("Upload Resume", type=["pdf", "docx"])
 
@@ -49,29 +62,26 @@ for skills in role_jobs["skills_required"]:
 role_skill_freq = Counter(role_skills)
 required_skills = [skill for skill, _ in role_skill_freq.most_common(10)]
 
-with open("skill_frequency (finn).json", "r") as f:
+with open("skill_frequency.json", "r") as f:
     skill_freq = json.load(f)
 skill_list = list(skill_freq.keys())
+
 if uploaded_file:
     text = extract_text(uploaded_file)
     resume_skills = extract_resume_skills(text, skill_list)
-
     matched = list(set(required_skills) & set(resume_skills))
     missing = list(set(required_skills) - set(resume_skills))
-
     score = (len(matched) / len(required_skills)) * 100 if required_skills else 0
-
     st.subheader("Results")
     st.write("Matched Skills:", matched)
     st.write("Missing Skills:", missing)
     st.progress(int(score))
     st.write("Readiness Score:", round(score, 2), "%")
-
-    # 👇 MOVE THIS HERE
-    if missing:
-        st.subheader("Recommended Skills to Learn")
-        for skill in missing:
-            st.write(f"• {skill}")
+    
+if missing:
+    st.subheader("Recommended Skills to Learn")
+    for skill in missing:
+        st.write(f"• {skill}")
 
 
 
