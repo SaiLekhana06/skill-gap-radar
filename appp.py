@@ -12,10 +12,11 @@ st.write("Upload your resume and see how ready you are for your dream role.")
 col1, col2 = st.columns(2)
 
 with col1:
-    role_search = st.text_input("Search Target Role")
+    role_search = st.text_input("Search Target Role", key="role_search")
 
 with col2:
-    job_search = st.text_input("Search Job Title")
+    job_search = st.text_input("Search Job Title", key="job_search")
+
 
 df = pd.read_csv("job_description_1.csv")
 roles = ["-- Select Role (Optional) --"] + sorted(df["role_category"].dropna().unique())
